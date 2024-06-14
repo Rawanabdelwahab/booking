@@ -1,10 +1,11 @@
 import workingHoursModel from "../models/workingHours.js";
+import moment from "moment";
 export const post = async (req, res) => {
   const { date, startTime, endTime, user, repeating } = req.body;
   const { dayOfWeek } = getWeekDates(date);
-  console.log(dayOfWeek);
+  // console.log(dayOfWeek);
   const foundRepeating = await workingHoursModel
-    .findOne({ dayOfWeek, startTime, endTime, repeating: { $ne: true } })
+    .findOne({ dayOfWeek, startTime, endTime, repeating: true })
     .lean();
   if (foundRepeating) {
     console.log("Repeated");
@@ -15,7 +16,7 @@ export const post = async (req, res) => {
       startTime,
       endTime,
       user,
-      repeating
+      repeating,
     });
   res.json();
 };
@@ -56,7 +57,7 @@ export const deleteOne = async (req, res) => {
   res.json(deletedData);
 };
 export const getWorkingHoursOfWeek = async (req, res) => {
-  const { date, user } = req.body;
+  const { date, user, repeating } = req.body;
 
   // Determine the start and end dates of the week
   const { startDate, endDate } = getWeekDates(date);
@@ -65,7 +66,27 @@ export const getWorkingHoursOfWeek = async (req, res) => {
     // Find all working hours for the week of the provided date
     const workingHours = await workingHoursModel.find({
       user: user,
-      date: { $gte: startDate, $lte: endDate },
+      $or: [
+        { date: { $gte: startDate, $lte: endDate } },
+        { repeating: true, date: { $lte: startDate } },
+      ],
+    });
+    res.json(workingHours);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getWorkingHoursOfAnyWeek = async (req, res) => {
+  const { date, user } = req.body;
+  const { startDate, endDate, dayOfWeek } = getWeekDates(date);
+  //console.log({ "startDate=": startDate });
+  try {
+    // Find all working hours for the week of the provided date
+    const workingHours = await workingHoursModel.find({
+      user: user,
+      dayOfWeek: { $eq: dayOfWeek },
+      // date: { $gte: startDate, $lte: endDate },
     });
 
     res.json(workingHours);
@@ -73,12 +94,11 @@ export const getWorkingHoursOfWeek = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-function getWeekDates(date) {
-  const d = new Date(date); //the input date
-  const dayOfWeek = d.getDay(); // 0 (Sunday) to 6 (Saturday)   choose the day
-  const startDate = new Date(d); // Copy the provided date
-  startDate.setDate(d.getDate() - dayOfWeek); // Set to the first day of the  week (Sunday)   if d=2   2-2        
-  const endDate = new Date(startDate); // Copy the start date
-  endDate.setDate(startDate.getDate() + 6); // Set to the last day of the week (Saturday)
+
+export function getWeekDates(date) {
+  const d = moment(date); // Convert the input date to a moment object
+  const dayOfWeek = d.day(); // Get the day of the week (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
+  const startDate = moment(d).startOf("week"); // Set to the first day of the week (Sunday)
+  const endDate = moment(startDate).endOf("week"); // Set to the last day of the week (Saturday)
   return { startDate, endDate, dayOfWeek };
 }
