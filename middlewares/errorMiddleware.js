@@ -1,5 +1,7 @@
 import workingHoursModel from "../models/workingHours.js";
+
 import { getWeekDates } from "../controllers/workingHours.js";
+
 export const slot = async (req, res, next) => {
   const { date, startTime, endTime, user, repeating } = req.body;
   const { dayOfWeek } = getWeekDates(date);

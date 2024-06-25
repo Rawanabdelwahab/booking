@@ -31,11 +31,11 @@ const booking = new Schema(
       ref: "staff",
       required: true,
     },
-    // user: {
-    //   type: ObjectId,
-    //   ref: "login",
-    //   required: true,
-    // },
+    user: {
+      type: ObjectId,
+      ref: "login",
+      required: true,
+    },
   },
   { timestamps: true }
 );
