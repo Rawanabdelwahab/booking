@@ -1,29 +1,12 @@
 import bookingModel from "../models/booking.js";
 import moment from "moment";
+
 export const appointmentBooking = async (req, res) => {
-  const {
-    date,
-    startTime,
-    endTime,
-    user,
-    service,
-    price,
-    duration,
-    staffMember,
-  } = req.body;
-  const { dayOfWeek } = getDates(date);
+  const { date, startTime, endTime, user, service, price, duration } = req.body;
+  const { dayOfWeek } = getWeekDates(date);
   // console.log(dayOfWeek);
   const foundRepeating = await bookingModel
-    .findOne({
-      dayOfWeek,
-      startTime,
-      endTime,
-      service,
-      price,
-      duration,
-      user,
-      staffMember,
-    })
+    .findOne({ dayOfWeek, startTime, endTime })
     .lean();
   if (foundRepeating) {
     console.log("Repeated");
@@ -37,12 +20,10 @@ export const appointmentBooking = async (req, res) => {
       service,
       price,
       duration,
-      staffMember,
     });
-    
   res.json();
 };
-export function getDates(date) {
+export function getWeekDates(date) {
   const d = moment(date); // Convert the input date to a moment object
   const dayOfWeek = d.day(); // Get the day of the week (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
   const startDate = moment(d).startOf("week"); // Set to the first day of the week (Sunday)

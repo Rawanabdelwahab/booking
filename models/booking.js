@@ -22,15 +22,19 @@ const booking = new Schema(
       type: Number,
       required: true,
     },
+    dayOfWeek: {
+      type: Number,
+      required: true,
+    },
     duration: {
       type: Number,
       required: true,
     },
-    staffMember: {
-      type: ObjectId,
-      ref: "staff",
-      required: true,
-    },
+    // staffMember: {
+    //   type: ObjectId,
+    //   ref: "staff",
+    //   required: true,
+    // },
     user: {
       type: ObjectId,
       ref: "login",
