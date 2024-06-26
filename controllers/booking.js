@@ -1,22 +1,14 @@
 import bookingModel from "../models/booking.js";
 import moment from "moment";
-
 export const appointmentBooking = async (req, res) => {
   const { date, startTime, endTime, user, service, price, duration } = req.body;
   const { dayOfWeek } = getWeekDates(date);
 
-  const foundRepeating = await bookingModel.findOne({
-    dayOfWeek,
-    $or: [
-      { startTime: { $lt: endTime, $gte: startTime } },
-      { endTime: { $gt: startTime, $lte: endTime } },
-      { startTime: { $lte: startTime }, endTime: { $gte: endTime } }
-    ]
-  }).lean();
-
+  const foundRepeating = await bookingModel
+    .findOne({ dayOfWeek, startTime, endTime })
+    .lean();
   if (foundRepeating) {
     console.log("Repeated");
-    return res.status(400).json({ message: "Time slot already booked" });
   } else {
     await bookingModel.create({
       dayOfWeek,
